@@ -6,17 +6,14 @@ const type1, type2;
 macro ACue={UE,Capability,Policy,Texp}sk(HAHM);
 protocol sphp(UE,HAHM,VAHM,TBS)
 {
-    role HAHM
-    {
+    role HAHM {
         var ck: KeyMaterial;
         var ik: KeyMaterial;
         match(ck, H(k(UE, VAHM), UE, TBS, type1));
         match(ik, H(k(UE, VAHM), UE, TBS, type2));
         send_1(HAHM,VAHM,{UE,SEQ,ck, ik}pk(VAHM));
     }
-
-    role VAHM
-    {
+    role VAHM {
         fresh N2: Nonce;
         var MAC1,MAC2,MAC3: text;
         var N1: Nonce;
@@ -40,9 +37,7 @@ protocol sphp(UE,HAHM,VAHM,TBS)
         claim(VAHM, Niagree);
         claim(VAHM, Nisynch);
     }
-
-    role UE
-    {
+    role UE {
         fresh N1:Nonce;
         var N2:Nonce;
         var MAC1,MAC2,MAC3:text;
@@ -63,9 +58,7 @@ protocol sphp(UE,HAHM,VAHM,TBS)
         claim(UE, Niagree);
         claim(UE, Nisynch);
     }
-
-    role TBS
-    {
+    role TBS {
         var sessionKey: KeyMaterial;
         recv_5(VAHM,TBS,{sessionKey}k(VAHM, TBS));
         claim(TBS, Secret,sessionKey);
