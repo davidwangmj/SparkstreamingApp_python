@@ -1,0 +1,73 @@
+usertype text;
+usertype KeyMaterial;
+hashfunction H;
+const SEQ,Capability,Policy,Texp:text;
+const type1, type2;
+macro ACue={UE,Capability,Policy,Texp}sk(HAHM);
+protocol sphp(UE,HAHM,VAHM,TBS)
+{
+    role HAHM
+    {
+        var ck: KeyMaterial;
+        var ik: KeyMaterial;
+        match(ck, H(k(UE, VAHM), UE, TBS, type1));
+        match(ik, H(k(UE, VAHM), UE, TBS, type2));
+        send_1(HAHM,VAHM,{UE,SEQ,ck, ik}pk(VAHM));
+    }
+
+    role VAHM
+    {
+        fresh N2: Nonce;
+        var MAC1,MAC2,MAC3: text;
+        var N1: Nonce;
+        var Key: KeyMaterial;
+        var ck: KeyMaterial;
+        var ik: KeyMaterial;
+        var sessionKey: KeyMaterial;
+        recv_1(HAHM,VAHM,{UE, SEQ, ck, ik}pk(VAHM));
+        recv_2(UE,VAHM,{N1,SEQ,ACue}ck,MAC1);
+        match(MAC2, H(ik,UE,VAHM,N1,N2,SEQ));
+        send_3(VAHM,UE,{N2,SEQ}ik,MAC2);
+        match(Key, H(ck, ik,UE,TBS,N1,N2,SEQ));
+        match(MAC3, H(Key,UE,VAHM,N1,N2,SEQ));
+        recv_4(UE,VAHM,MAC3);
+        match(MAC3, H(Key,UE,VAHM,N1,N2,SEQ));
+        match(sessionKey, H(VAHM,UE,TBS,SEQ));
+        send_5(VAHM,TBS,{sessionKey}k(VAHM, TBS));
+        claim(VAHM, Secret,Key);
+        claim(VAHM, Alive);
+        claim(VAHM, Weakagree);
+        claim(VAHM, Niagree);
+        claim(VAHM, Nisynch);
+    }
+
+    role UE
+    {
+        fresh N1:Nonce;
+        var N2:Nonce;
+        var MAC1,MAC2,MAC3:text;
+        var Key: KeyMaterial;
+        var ck: KeyMaterial;
+        var ik: KeyMaterial;
+        match(ck, H(k(UE, VAHM), UE, TBS, type1));
+        match(ik, H(k(UE, VAHM), UE, TBS, type2));
+        match(MAC1, H(ik,UE,VAHM,N1,SEQ,ACue));
+        send_2(UE,VAHM,{N1,SEQ,ACue}ck,MAC1);
+        recv_3(VAHM,UE,{N2,SEQ}ck,MAC2);
+        match(Key, H(ck, ik,UE,VAHM,N1,N2,SEQ));
+        match(MAC3, H(Key,UE,VAHM,N1,N2,SEQ));
+        send_4(UE,VAHM,MAC3);
+        claim(UE, Secret,Key);
+        claim(UE, Alive);
+        claim(UE, Weakagree);
+        claim(UE, Niagree);
+        claim(UE, Nisynch);
+    }
+
+    role TBS
+    {
+        var sessionKey: KeyMaterial;
+        recv_5(VAHM,TBS,{sessionKey}k(VAHM, TBS));
+        claim(TBS, Secret,sessionKey);
+    }
+}
